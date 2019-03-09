@@ -1,5 +1,5 @@
 # duodecimal
-Python converter/calculator for the duodecimal numeral system
+Python converter/calculator for the duodecimal numeral system (1,2,3,4,5,6,7,8,9,X,E)
 
 ```python
 from duodecimal import duo
