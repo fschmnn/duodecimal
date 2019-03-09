@@ -1,4 +1,6 @@
 # duodecimal
+try it out now [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/fschmnn/duodecimal/master)
+
 Python converter/calculator for the duodecimal numeral system (1,2,3,4,5,6,7,8,9,X,E)
 
 ## How to use
