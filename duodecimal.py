@@ -145,7 +145,10 @@ class duo:
         return self.decimal
     
     def __repr__(self):
-        return self.duodecimal[:7].rstrip('0') + '(base12)'
-    
+        if '.' in self.duodecimal: 
+            return self.duodecimal[:7].rstrip('0') + '(base12)'
+        else:
+            return self.duodecimal + '(base12)'
+         
     def __str__(self):
         return self.duodecimal
