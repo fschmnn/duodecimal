@@ -5,7 +5,7 @@ Python converter/calculator for the duodecimal numeral system (1,2,3,4,5,6,7,8,9
 
 ## How to use
 ```python
-from duodecimal import duo, binary
+from BaseConverter import duo, binary
 ```
 A duodecimal number can be initialized by passing a duodecimal number as a string or a decimal number as an int/float
 ```python
