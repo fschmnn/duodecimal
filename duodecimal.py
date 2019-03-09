@@ -13,28 +13,41 @@ class BaseConverter:
         
     http://www.dozenal.org/drupal/sites_bck/default/files/DSA-ConversionRules_0.pdf
     '''
-    
+    bases = {
+            2  : '01',
+            8  : '01234567',
+            10 : '0123456789',
+            12 : '0123456789XE',
+            16 : '0123456789ABCDEF'
+            }
+
     def __init__(self,number,digits):
         ''' determine type of input and convert to decimal/duodecimal '''
         
-        BaseConverter.digits     = digits
-        BaseConverter.base       = len(digits)
-        BaseConverter.to_digits = {k: v for k,v in enumerate(digits)}
-        BaseConverter.from_digits = {v: k for k,v in enumerate(digits)}
-        
+        self.digits = digits
+        self.base   = len(digits)    
+
         if type(number) == int or type(number) == float:
             self.value  = number
-            self.string = BaseConverter.from_dec(number,BaseConverter.base)
-        
+            self.string = BaseConverter.from_dec(number,digits)
         elif type(number) == str:
-            self.value  = BaseConverter.to_dec(number,BaseConverter.base)
+            self.value  = BaseConverter.to_dec(number,digits)
             self.string = number
+        elif isinstance(number,BaseConverter):
+            self.value  = number.value
+            self.string = BaseConverter.from_dec(number,digits) 
         else:
             raise TypeError('input type must be str or float/int')
     
     @staticmethod
-    def from_dec(number,base):
+    def from_dec(number,digits=None,base=None):
         ''' convert decimal float/int to duodecimal string '''
+
+        if digits:
+            base = len(digits) 
+            to_digits = {k: v for k,v in enumerate(digits)}
+        elif base:
+            to_digits = {k: v for k,v in enumerate(BaseConverter.bases[base])}
 
         # handle negative numbers
         if number <0:
@@ -49,7 +62,7 @@ class BaseConverter:
         while quotient != 0:
             quotient, remainder = divmod(quotient,base)
             out.insert(0,remainder)
-        integer = ''.join([BaseConverter.to_digits[dig] for dig in out])
+        integer = ''.join([to_digits[dig] for dig in out])
 
         if fractional:
             out = []
@@ -59,16 +72,22 @@ class BaseConverter:
                 out.append(quotient)
             if remainder > 0.5:
                 out.append(1)
-            decimal = '.' + ''.join([BaseConverter.to_digits[dig] for dig in out])
+            decimal = '.' + ''.join([to_digits[dig] for dig in out])
         else:
             decimal = ''
             
         return sign + integer + decimal.rstrip('0')
    
     @staticmethod
-    def to_dec(string,base):
+    def to_dec(string,digits=None,base=None):
         ''' convert string to decimal float/int '''
-        
+
+        if digits:
+            base = len(digits) 
+            from_digits = {v: k for k,v in enumerate(digits)}
+        elif base:
+            from_digits = {v: k for k,v in enumerate(BaseConverter.bases[base])}
+
         # handle negative numbers
         if string.startswith('-'):
             string = string[1:]
@@ -76,8 +95,8 @@ class BaseConverter:
         else:
             sign = 1
             
-        if set(string) > set(BaseConverter.digits):
-            invalid = set(string) - set(BaseConverter.digits)
+        if set(string) > set(digits):
+            invalid = set(string) - set(digits)
             raise ValueError('invalid character'.format(invalid))
         
         if '.' in string:
@@ -87,85 +106,122 @@ class BaseConverter:
         
         out = 0
         for power, digit in enumerate(integer[::-1]):
-            out += BaseConverter.form_digits[digit] * base**power
+            out += from_digits[digit] * base**power
         for power, digit in enumerate(str(fractional),1):
-            out += BaseConverter.from_digits[digit] * base**(-power)
+            out += from_digits[digit] * base**(-power)
             
         return out
     
     def __add__(self,other):
         if not isinstance(other, BaseConverter):
-            other = BaseConverter(other,BaseConverter.digits)
-
-        return BaseConverter(self.value + other.value,BaseConverter.digits)
+            other = BaseConverter(other,self.digits)
+        return BaseConverter(self.value + other.value,digits=self.digits)
 
     def __iadd__(self,other):
         if not isinstance(other, BaseConverter):
-            other = BaseConverter(other,BaseConverter.digits)
+            other = BaseConverter(other,self.digits)
         self.value = self.value + other.value
-        self.string = BaseConverter.from_dec(self.value,BaseConverter.base)
-
+        self.string = BaseConverter.from_dec(self.value,digits=self.digits)
         return self
 
     def __radd__(self,other):
-        return BaseConverter(other,BaseConverter.digits) + self
+        return BaseConverter(other,self.digits) + self
 
     def __sub__(self,other):
         if not isinstance(other, BaseConverter):
-            other = BaseConverter(other,BaseConverter.digits)
-
-        return BaseConverter(self.value - other.value,BaseConverter.digits)
+            other = BaseConverter(other,self.digits)
+        return BaseConverter(self.value - other.value,digits=self.digits)
 
     def __isub__(self,other):
         if not isinstance(other, BaseConverter):
-            other = BaseConverter(other,BaseConverter.digits)
+            other = BaseConverter(other,self.digits)
         self.value = self.value - other.value
-        self.string = BaseConverter.from_dec(self.value,BaseConverter.base)
-
+        self.string = BaseConverter.from_dec(self.value,digits=self.digits)
         return self
 
     def __rsub__(self,other):
-        return BaseConverter(other,BaseConverter.digits) - self
+        return BaseConverter(other,self.digits) - self
     
     def __mul__(self,other):
         if not isinstance(other, BaseConverter):
-            other = BaseConverter(other,BaseConverter.digits)
-
-        return BaseConverter(self.value * other.value,BaseConverter.digits)
+            other = BaseConverter(other,self.digits)
+        return BaseConverter(self.value * other.value,digits=self.digits)
 
     def __imul__(self,other):
         if not isinstance(other, BaseConverter):
-            other = BaseConverter(other,BaseConverter.digits)
+            other = BaseConverter(other,self.digits)
         self.value = self.value * other.value
-        self.string = BaseConverter.from_dec(self.value,BaseConverter.base)
-
+        self.string = BaseConverter.from_dec(self.value,digits=self.digits)
         return self
 
     def __rmul__(self,other):
-        return BaseConverter(other,BaseConverter.digits) * self
+        return BaseConverter(other,self.digits) * self
 
     def __truediv__(self,other):
         if not isinstance(other, BaseConverter):
-            other = BaseConverter(other,BaseConverter.digits)
-
-        return BaseConverter(self.value / other.value,BaseConverter.digits)
+            other = BaseConverter(other,self.digits)
+        return BaseConverter(self.value / other.value,self.digits)
  
     def __itruediv__(self,other):
         if not isinstance(other, BaseConverter):
-            other = BaseConverter(other,BaseConverter.digits)
+            other = BaseConverter(other,self.digits)
         self.value = self.value / other.value
-        self.string = BaseConverter.from_dec(self.value,BaseConverter.base)
-
+        self.string = BaseConverter.from_dec(self.value,digits=self.digits)
         return self
 
     def __rtruediv__(self,other):
-        return BaseConverter(other,BaseConverter.digits) / self
+        return BaseConverter(other,self.digits) / self
+
+    def __pow__(self,other):
+        if not isinstance(other, BaseConverter):
+            other = BaseConverter(other,self.digits)
+        return BaseConverter(self.value ** other.value,self.digits)
+ 
+    def __ipow__(self,other):
+        if not isinstance(other, BaseConverter):
+            other = BaseConverter(other,self.digits)
+        self.value = self.value ** other.value
+        self.string = BaseConverter.from_dec(self.value,digits=self.digits)
+        return self
+
+    def __rpow__(self,other):
+        return BaseConverter(other,self.digits) ** self
 
     def __repr__(self):
         if '.' in self.string: 
-            return self.string[:7].rstrip('0') + f'(base{BaseConverter.base})'
+            return self.string[:7].rstrip('0') + f'(base{self.base})'
         else:
-            return self.string + f'(base{BaseConverter.base})'
+            return self.string + f'(base{self.base})'
+
+    def __lt__(self, other):
+        if not isinstance(other, BaseConverter):
+            other = BaseConverter(other,self.digits)
+        return self.value < other.value
+
+    def __le__(self, other):
+        if not isinstance(other, BaseConverter):
+            other = BaseConverter(other,self.digits)
+        return self.value <= other.value
+
+    def __eq__(self, other):
+        if not isinstance(other, BaseConverter):
+            other = BaseConverter(other,self.digits)
+        return self.value == other.value
+
+    def __ne__(self, other):
+        if not isinstance(other, BaseConverter):
+            other = BaseConverter(other,self.digits)
+        return self.value != other.value
+
+    def __ge__(self, other):
+        if not isinstance(other, BaseConverter):
+            other = BaseConverter(other,self.digits)
+        return self.value >= other.value
+
+    def __gt__(self, other):
+        if not isinstance(other, BaseConverter):
+            other = BaseConverter(other,self.digits)
+        return self.value > other.value
 
     def __str__(self):
         return self.string
@@ -179,7 +235,7 @@ class BaseConverter:
 
     def to_base(self,base):
         ''' give out in different base '''
-        return BaseConverter.from_dec(self.value,base) 
+        return BaseConverter.from_dec(self.value,base=base) 
 
 class duo(BaseConverter):
     ''' class to represent duodecimal numbers 
