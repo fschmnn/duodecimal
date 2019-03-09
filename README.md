@@ -5,7 +5,7 @@ Python converter/calculator for the duodecimal numeral system (1,2,3,4,5,6,7,8,9
 
 ## How to use
 ```python
-from duodecimal import duo
+from duodecimal import duo, binary
 ```
 A duodecimal number can be initialized by passing a duodecimal number as a string or a decimal number as an int/float
 ```python
@@ -22,8 +22,19 @@ f = duo(20) / 'X'
 The decimal representation can be accessed via
 ```python
 g = duo('X.31')
-g.dec()
+g.decimal()
+g.value
 ```
+Other bases are supported as well
+```python
+h = binary('1001')
+i = h + g
+```
+`i` takes the base from the left argument. Comparisions are also possible
+```python
+binary('110011') <= duo('X1')
+```
+
 ## Why base12?
 We use base10 because of the number of fingers we have and not because it is easy to use. While it might be handy for counting, it has serious disadvantages for arithmic operations. This is because 12 has more divisors and hence most sequences in the multiplication table are shorter
 
