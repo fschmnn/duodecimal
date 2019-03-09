@@ -25,7 +25,7 @@ class duo:
         
         elif type(number) == str:
             self.decimal    = self.duo_to_dec(number)
-            self.duodecimal = number.rstrip('0')
+            self.duodecimal = number
         else:
             raise TypeError('unkown type')
       
