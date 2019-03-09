@@ -95,8 +95,8 @@ class BaseConverter:
         else:
             sign = 1
             
-        if set(string) > set(digits):
-            invalid = set(string) - set(digits)
+        if set(string) > set(digits+'.'):
+            invalid = set(string) - set(digits+'.')
             raise ValueError('invalid character'.format(invalid))
         
         if '.' in string:
